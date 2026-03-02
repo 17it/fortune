@@ -6,12 +6,7 @@
     </div>
 
     <div class="tabs">
-      <div
-          v-for="tab in tabs"
-          :key="tab.key"
-          :class="['tab', { active: activeTab === tab.key }]"
-          @click="activeTab = tab.key"
-      >
+      <div v-for="tab in tabs" :key="tab.key" :class="['tab', { active: activeTab === tab.key }]" @click="activeTab = tab.key">
         <div class="tab-name">{{ tab.name }}</div>
         <div class="tab-level">{{ tab.level }}</div>
       </div>
@@ -21,15 +16,14 @@
       <div ref="chartContainer" class="chart"></div>
     </div>
 
-    <div class="score">本周平均得分 {{ averageScore }}分</div>
+    <div class="score">本周平均得分 {{ averageScore[activeTab] }}分</div>
 
-    <div class="description">
-      本周运势不错，工作事情较多，但阻碍较小。财运上有小耗现象，需扎紧钱袋。情侣间的感情会升温，单身的朋友桃花运旺。
-    </div>
+    <div class="description">{{ description }}</div>
   </div>
 </template>
 
 <script>
+import { getWeeklyFortunenew } from '../api/index.js'
 import * as echarts from 'echarts'
 
 export default {
@@ -38,37 +32,114 @@ export default {
     return {
       activeTab: 'overall',
       tabs: [
-        { key: 'overall', name: '综合', level: '小吉' },
-        { key: 'health', name: '健康', level: '平淡' },
-        { key: 'career', name: '事业', level: '小吉' },
-        { key: 'love', name: '爱情', level: '小吉' }
+        { key: 'overall', name: '综合', level: '' },
+        { key: 'health', name: '健康', level: '' },
+        { key: 'career', name: '事业', level: '' },
+        { key: 'love', name: '爱情', level: '' }
       ],
-      days: ['今天', '周二', '周三', '周四', '周五', '周六', '周日'],
-      chartData: [36, 45, 35, 40, 75, 70, 65],
-      averageScore: 63,
+      days: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'],
+      chartData: {},
+      averageScore: {},
+      description: '',
       chart: null
     }
   },
   mounted() {
-    this.initChart()
+    this.getData()
     window.addEventListener('resize', this.handleResize)
   },
   beforeDestroy() {
     window.removeEventListener('resize', this.handleResize)
+
     if (this.chart) {
       this.chart.dispose()
     }
   },
   methods: {
+    getData() {
+      getWeeklyFortunenew({
+        name: '唐永明',
+        sex: '男',
+        birthday: '1992-01-23 01:00'
+      }).then(res => {
+        if (res.status === 0) {
+          this.genData(res.data)
+          return
+        }
+
+        alert(res.msg)
+      })
+    },
+
+    genData(data) {
+      const avg = (arr) => {
+        let s = 0
+
+        arr.forEach(i => {
+          s += i
+        })
+
+        return parseInt(s / arr.length)
+      }
+
+      const label = (score) => {
+        if (score >= 80) {
+          return '大吉'
+        }
+
+        if (score >= 60) {
+          return '小吉'
+        }
+
+        if (score >= 40) {
+          return '平淡'
+        }
+
+        if (score >= 20) {
+          return '低迷'
+        }
+
+        return '小凶'
+      }
+
+      this.averageScore = {
+        overall: data.score, // data[0]
+        health: avg(data[1]), // data[1]
+        career: avg(data[2]), // data[2]
+        love: avg(data[3]) // data[3]
+      }
+
+      this.chartData = {
+        overall: data[0],
+        health: data[1],
+        career: data[2],
+        love: data[3]
+      }
+
+      this.description = data.description
+
+      this.tabs.forEach(el => {
+        el.level = label(this.averageScore[el.key])
+      })
+
+      this.initChart()
+    },
+
     initChart() {
       const chartContainer = this.$refs.chartContainer
       if (!chartContainer) return
 
       this.chart = echarts.init(chartContainer)
-      this.updateChart()
+
+      this.$nextTick(() => {
+        this.updateChart()
+      })
     },
+
     updateChart() {
       if (!this.chart) return
+
+      const cd = this.chartData[this.activeTab]
 
       const option = {
         grid: {
@@ -111,7 +182,7 @@ export default {
         },
         series: [
           {
-            data: this.chartData,
+            data: cd,
             type: 'line',
             smooth: true,
             symbol: 'circle',
@@ -167,6 +238,7 @@ export default {
 
       this.chart.setOption(option)
     },
+
     handleResize() {
       if (this.chart) {
         this.chart.resize()
@@ -241,12 +313,19 @@ export default {
   color: #666;
 }
 
+.tab.active .tab-name,
 .tab.active .tab-level {
-  color: #333;
+  color: #fff;
 }
 
 .chart-wrapper {
   margin-bottom: 20px;
+  position: relative;
+  width: 100%;
+
+  canvas {
+    width: 100%;
+  }
 }
 
 .chart {
