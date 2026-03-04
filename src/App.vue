@@ -1,15 +1,18 @@
 <template>
   <div id="app">
+    <Consultation />
     <FortuneWeek />
   </div>
 </template>
 
 <script>
+import Consultation from './components/Consultation.vue'
 import FortuneWeek from './components/FortuneWeek.vue'
 
 export default {
   name: 'App',
   components: {
+    Consultation,
     FortuneWeek
   }
 }
