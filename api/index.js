@@ -37,3 +37,23 @@ export function saveFortuneData(key, data) {
 export function getLocalFortuneData() {
   return fetch('/api/getFortuneData').then(res => res.json())
 }
+
+/**
+ * 更新指定周的运势数据
+ */
+export function updateFortuneData(key, data) {
+  return fetch('/api/updateFortuneData', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ key, data })
+  }).then(res => res.json())
+}
+
+/**
+ * 删除指定周的运势数据
+ */
+export function deleteFortuneData(key) {
+  return fetch(`/api/deleteFortuneData?key=${encodeURIComponent(key)}`, {
+    method: 'DELETE'
+  }).then(res => res.json())
+}

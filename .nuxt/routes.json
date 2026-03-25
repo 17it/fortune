@@ -1,8 +1,16 @@
 [
   {
+    "name": "admin",
+    "path": "/admin",
+    "component": "/Users/tony/Documents/playground/fortune/pages/admin.vue",
+    "chunkName": "pages/admin",
+    "_name": "_dc6e660c"
+  },
+  {
     "name": "index",
     "path": "/",
     "component": "/Users/tony/Documents/playground/fortune/pages/index.vue",
-    "chunkName": "pages/index"
+    "chunkName": "pages/index",
+    "_name": "_605978fd"
   }
 ]

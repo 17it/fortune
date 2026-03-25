@@ -69,6 +69,57 @@ async function getFortuneData(req, res) {
   }
 }
 
+async function updateFortuneData(req, res) {
+  if (req.method !== 'PUT') {
+    return sendJson(res, 405, { message: 'Method Not Allowed' })
+  }
+
+  let body
+  try { body = await getBody(req) } catch (e) { return sendJson(res, 400, { message: 'Invalid JSON body' }) }
+
+  const { key, data } = body
+  if (!key || data === undefined) {
+    return sendJson(res, 400, { message: 'Missing key or data' })
+  }
+
+  try {
+    const content = await fs.readFile(DATA_FILE, 'utf-8')
+    const json = JSON.parse(content)
+    json[key] = data
+    await fs.writeFile(DATA_FILE, JSON.stringify(json, null, 2), 'utf-8')
+    sendJson(res, 200, { message: 'Updated successfully', key })
+  } catch (err) {
+    console.error('Failed to update fortune data:', err)
+    sendJson(res, 500, { message: 'Failed to update data' })
+  }
+}
+
+async function deleteFortuneData(req, res) {
+  if (req.method !== 'DELETE') {
+    return sendJson(res, 405, { message: 'Method Not Allowed' })
+  }
+
+  const params = getQueryParams(req)
+  const key = params.get('key')
+  if (!key) {
+    return sendJson(res, 400, { message: 'Missing key parameter' })
+  }
+
+  try {
+    const content = await fs.readFile(DATA_FILE, 'utf-8')
+    const json = JSON.parse(content)
+    if (!json[key]) {
+      return sendJson(res, 404, { message: 'Key not found', key })
+    }
+    delete json[key]
+    await fs.writeFile(DATA_FILE, JSON.stringify(json, null, 2), 'utf-8')
+    sendJson(res, 200, { message: 'Deleted successfully', key })
+  } catch (err) {
+    console.error('Failed to delete fortune data:', err)
+    sendJson(res, 500, { message: 'Failed to delete data' })
+  }
+}
+
 function proxyFortune(req, res) {
   const params = getQueryParams(req)
   const query = new URLSearchParams({
@@ -95,6 +146,8 @@ function proxyFortune(req, res) {
 const routes = {
   '/saveFortuneData': saveFortuneData,
   '/getFortuneData': getFortuneData,
+  '/updateFortuneData': updateFortuneData,
+  '/deleteFortuneData': deleteFortuneData,
   '/proxyFortune': proxyFortune
 }
 
