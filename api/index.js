@@ -16,8 +16,8 @@ export function getWeeklyFortunenew1(params) {
  */
 export function getWeeklyFortunenew(params) {
   const query = new URLSearchParams(params).toString()
-  return fetch(`https://coco70.51wnl-cq.com/numberologynew/fortune/GetWeeklyFortunenew?${query}`)
-  .then(res => res.json())
+  return fetch(`/api/proxyFortune?${query}`)
+    .then(res => res.json())
 }
 
 /**
