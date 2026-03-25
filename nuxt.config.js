@@ -1,5 +1,9 @@
 export default {
-  target: 'static',
+  target: 'server',
+  server: {
+    host: '0.0.0.0',
+    port: 3000
+  },
   head: {
     title: '八字运程 - 本周运势',
     meta: [
