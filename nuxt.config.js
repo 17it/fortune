@@ -22,9 +22,7 @@ export default {
     { src: '@/plugins/echarts', ssr: false }
   ],
   serverMiddleware: [
-    { path: '/api/saveFortuneData', handler: '~/api/saveFortuneData' },
-    { path: '/api/getFortuneData', handler: '~/api/getFortuneData' },
-    { path: '/api/proxyFortune', handler: '~/api/proxyFortune' }
+    { path: '/api', handler: '~/api/server' }
   ],
   components: true,
   modules: [

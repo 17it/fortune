@@ -127,7 +127,7 @@ export default {
 
     loadLocalData() {
       getLocalFortuneData().then(res => {
-        this.localData = res.weeks || {}
+        this.localData = res || {}
         this.getData()
       }).catch(() => {
         this.getData()
