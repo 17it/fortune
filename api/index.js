@@ -21,3 +21,10 @@ export function saveFortuneData(key, data) {
     body: JSON.stringify({ key, data })
   }).then(res => res.json())
 }
+
+/**
+ * 获取本地已存储的所有运势数据
+ */
+export function getLocalFortuneData() {
+  return fetch('/api/getFortuneData').then(res => res.json())
+}

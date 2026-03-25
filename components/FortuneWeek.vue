@@ -1,9 +1,15 @@
 <template>
   <div class="fortune-container">
     <div class="header">
-      <h2 class="title">本周运程</h2>
-      <div class="date-range">{{ dateRange }}</div>
+      <h2 class="title">运程查询</h2>
+      <div class="week-picker-wrapper">
+        <select v-model="selectedWeek" class="week-picker" @change="onWeekChange">
+          <option v-for="w in weekOptions" :key="w.key" :value="w.key">{{ w.label }}</option>
+        </select>
+      </div>
     </div>
+
+    <!--<div class="date-range-display">{{ dateRange }}</div>-->
 
     <div class="tabs">
       <div v-for="tab in tabs" :key="tab.key" :class="['tab', { active: activeTab === tab.key }]" @click="activeTab = tab.key">
@@ -16,22 +22,25 @@
       <div ref="chartContainer" class="chart"></div>
     </div>
 
-    <div class="score">本周平均得分 {{ averageScore[activeTab] }}分</div>
+    <div class="score">{{ weekLabel }}平均得分 {{ averageScore[activeTab] }}分</div>
 
     <div class="description">{{ description }}</div>
   </div>
 </template>
 
 <script>
-import moment from 'moment'
-import { getWeeklyFortunenew, saveFortuneData } from '@/api/index.js'
+import { getWeeklyFortunenew, saveFortuneData, getLocalFortuneData } from '@/api/index.js'
 import { PERSON } from '~/utils/config'
+import moment from 'moment'
 
 export default {
   name: 'FortuneWeek',
   data() {
+    const { start, end } = this.getWeekRange()
     return {
       activeTab: 'overall',
+      selectedWeek: this.formatWeekKey(start, end),
+      localData: {},
       tabs: [
         { key: 'overall', name: '综合', level: '' },
         { key: 'health', name: '健康', level: '' },
@@ -46,10 +55,30 @@ export default {
     }
   },
   computed: {
+    weekOptions() {
+      const options = []
+      const { start, end } = this.getWeekRange()
+      const currentKey = this.formatWeekKey(start, end)
+      options.push({ key: currentKey, label: this.formatWeekLabel(start, end) })
+
+      const historyKeys = Object.keys(this.localData).filter(k => k !== currentKey).sort().reverse()
+      historyKeys.forEach(key => {
+        options.push({ key, label: this.formatWeekLabelFromKey(key) })
+      })
+
+      return options
+    },
+
     dateRange() {
-      const start = moment().startOf('week').add(1, 'day')
-      const end = moment(start).add(6, 'days')
-      return `${start.format('YYYY年MM月DD日')}-${end.format('MM月DD日')}`
+      if (this.isCurrentWeek(this.selectedWeek)) {
+        const { start, end } = this.getWeekRange()
+        return this.formatWeekLabel(start, end)
+      }
+      return this.formatWeekLabelFromKey(this.selectedWeek)
+    },
+
+    weekLabel() {
+      return this.isCurrentWeek(this.selectedWeek) ? '本周' : '该周'
     }
   },
   watch: {
@@ -58,7 +87,7 @@ export default {
     }
   },
   mounted() {
-    this.getData()
+    this.loadLocalData()
     window.addEventListener('resize', this.handleResize)
   },
   beforeDestroy() {
@@ -69,10 +98,56 @@ export default {
     }
   },
   methods: {
+    getWeekRange(date) {
+      const d = date || moment()
+      const start = moment(d).startOf('week').add(1, 'day')
+      const end = moment(start).add(6, 'days')
+      return { start, end }
+    },
+
+    formatWeekKey(start, end) {
+      return `${start.format('YYYY.MM.DD')}-${end.format('YYYY.MM.DD')}`
+    },
+
+    formatWeekLabel(start, end) {
+      return `${start.format('YY.MM.DD')}-${end.format('MM.DD')}`
+    },
+
+    isCurrentWeek(weekKey) {
+      const { start, end } = this.getWeekRange()
+      return weekKey === this.formatWeekKey(start, end)
+    },
+
+    formatWeekLabelFromKey(key) {
+      const [s, e] = key.split('-')
+      const sm = moment(s, 'YYYY.MM.DD')
+      const em = moment(e, 'YYYY.MM.DD')
+      return this.formatWeekLabel(sm, em)
+    },
+
+    loadLocalData() {
+      getLocalFortuneData().then(res => {
+        this.localData = res.weeks || {}
+        this.getData()
+      }).catch(() => {
+        this.getData()
+      })
+    },
+
+    onWeekChange() {
+      if (this.isCurrentWeek(this.selectedWeek)) {
+        this.getData()
+      } else if (this.localData[this.selectedWeek]) {
+        this.genData(this.localData[this.selectedWeek])
+      }
+    },
+
     getData() {
       getWeeklyFortunenew(PERSON).then(res => {
         if (res.status === 0) {
           this.genData(res.data)
+          const { start, end } = this.getWeekRange()
+          saveFortuneData(this.formatWeekKey(start, end), res.data)
           return
         }
 
@@ -81,11 +156,6 @@ export default {
     },
 
     genData(data) {
-      const start = moment().startOf('week').add(1, 'day')
-      const end = moment(start).add(6, 'days')
-      const weekKey = `${start.format('YYYY.MM.DD')}-${end.format('YYYY.MM.DD')}`
-      saveFortuneData(weekKey, data)
-
       const avg = (arr) => {
         let s = 0
 
@@ -147,6 +217,7 @@ export default {
 
       this.$nextTick(() => {
         this.updateChart()
+        this.chart.resize()
       })
     },
 
@@ -277,7 +348,7 @@ export default {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 
 .title {
@@ -286,9 +357,47 @@ export default {
   color: #333;
 }
 
-.date-range {
+.week-picker-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #FFF9E6;
+  border: 1px solid #FFE58F;
+  border-radius: 20px;
+  padding: 4px 14px 4px 8px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.week-picker-wrapper:hover {
+  border-color: #FFD700;
+  box-shadow: 0 2px 8px rgba(255, 215, 0, 0.2);
+}
+
+.week-picker {
+  border: none;
+  background: transparent;
+  font-size: 13px;
+  color: #666;
+  cursor: pointer;
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+  padding: 4px 20px 4px 4px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M3 5l3 3 3-3' stroke='%23999' fill='none' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 2px center;
+}
+
+.week-picker:focus {
+  color: #333;
+}
+
+.date-range-display {
   font-size: 14px;
   color: #999;
+  margin-bottom: 20px;
+  text-align: center;
 }
 
 .tabs {
@@ -329,7 +438,6 @@ export default {
 }
 
 .chart-wrapper {
-  margin-bottom: 20px;
   position: relative;
   width: 100%;
 }

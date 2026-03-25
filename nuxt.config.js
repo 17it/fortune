@@ -18,7 +18,8 @@ export default {
     { src: '@/plugins/echarts', ssr: false }
   ],
   serverMiddleware: [
-    { path: '/api/saveFortuneData', handler: '~/api/saveFortuneData' }
+    { path: '/api/saveFortuneData', handler: '~/api/saveFortuneData' },
+    { path: '/api/getFortuneData', handler: '~/api/getFortuneData' }
   ],
   components: true,
   modules: [
