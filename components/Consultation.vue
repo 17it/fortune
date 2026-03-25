@@ -25,8 +25,12 @@
           <div class="fortune-item">
             <div class="fortune-label">健康</div>
             <div class="fortune-dots">
-              <span v-for="i in 5" :key="`health-${i}`"
-                    class="dot" :class="{ filled: i <= 3 }">
+              <span
+                v-for="i in 5"
+                :key="`health-${i}`"
+                class="dot"
+                :class="{ filled: i <= 3 }"
+              >
                 <span v-if="i <= 3" class="icon">🍃</span>
                 <span v-else class="icon-gray">🍃</span>
               </span>
@@ -36,8 +40,12 @@
           <div class="fortune-item">
             <div class="fortune-label">事业</div>
             <div class="fortune-dots">
-              <span v-for="i in 5" :key="`career-${i}`"
-                    class="dot" :class="{ filled: i <= 4 }">
+              <span
+                v-for="i in 5"
+                :key="`career-${i}`"
+                class="dot"
+                :class="{ filled: i <= 4 }"
+              >
                 <span v-if="i <= 4" class="icon">💼</span>
                 <span v-else class="icon-gray">💼</span>
               </span>
@@ -47,8 +55,12 @@
           <div class="fortune-item">
             <div class="fortune-label">爱情</div>
             <div class="fortune-dots">
-              <span v-for="i in 5" :key="`love-${i}`"
-                    class="dot" :class="{ filled: i <= 3 }">
+              <span
+                v-for="i in 5"
+                :key="`love-${i}`"
+                class="dot"
+                :class="{ filled: i <= 3 }"
+              >
                 <span v-if="i <= 3" class="icon">❤️</span>
                 <span v-else class="icon-gray">🤍</span>
               </span>
@@ -99,8 +111,6 @@
 </template>
 
 <script>
-import * as echarts from 'echarts'
-
 export default {
   name: 'Consultation',
   data() {
@@ -124,7 +134,7 @@ export default {
       const chartContainer = this.$refs.scoreChart
       if (!chartContainer) return
 
-      this.scoreChart = echarts.init(chartContainer)
+      this.scoreChart = this.$echarts.init(chartContainer)
       this.updateScoreChart()
     },
     updateScoreChart() {

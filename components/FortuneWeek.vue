@@ -2,7 +2,7 @@
   <div class="fortune-container">
     <div class="header">
       <h2 class="title">本周运程</h2>
-      <div class="date-range">2月23日-3月1日</div>
+      <div class="date-range">{{ dateRange }}</div>
     </div>
 
     <div class="tabs">
@@ -23,8 +23,9 @@
 </template>
 
 <script>
-import { getWeeklyFortunenew } from '../api/index.js'
-import * as echarts from 'echarts'
+import moment from 'moment'
+import { getWeeklyFortunenew, saveFortuneData } from '@/api/index.js'
+import { PERSON } from '~/utils/config'
 
 export default {
   name: 'FortuneWeek',
@@ -44,6 +45,18 @@ export default {
       chart: null
     }
   },
+  computed: {
+    dateRange() {
+      const start = moment().startOf('week').add(1, 'day')
+      const end = moment(start).add(6, 'days')
+      return `${start.format('YYYY年MM月DD日')}-${end.format('MM月DD日')}`
+    }
+  },
+  watch: {
+    activeTab() {
+      this.updateChart()
+    }
+  },
   mounted() {
     this.getData()
     window.addEventListener('resize', this.handleResize)
@@ -57,11 +70,7 @@ export default {
   },
   methods: {
     getData() {
-      getWeeklyFortunenew({
-        name: '唐永明',
-        sex: '男',
-        birthday: '1992-01-23 01:00'
-      }).then(res => {
+      getWeeklyFortunenew(PERSON).then(res => {
         if (res.status === 0) {
           this.genData(res.data)
           return
@@ -72,6 +81,11 @@ export default {
     },
 
     genData(data) {
+      const start = moment().startOf('week').add(1, 'day')
+      const end = moment(start).add(6, 'days')
+      const weekKey = `${start.format('YYYY.MM.DD')}-${end.format('YYYY.MM.DD')}`
+      saveFortuneData(weekKey, data)
+
       const avg = (arr) => {
         let s = 0
 
@@ -103,10 +117,10 @@ export default {
       }
 
       this.averageScore = {
-        overall: data.score, // data[0]
-        health: avg(data[1]), // data[1]
-        career: avg(data[2]), // data[2]
-        love: avg(data[3]) // data[3]
+        overall: data.score,
+        health: avg(data[1]),
+        career: avg(data[2]),
+        love: avg(data[3])
       }
 
       this.chartData = {
@@ -129,7 +143,7 @@ export default {
       const chartContainer = this.$refs.chartContainer
       if (!chartContainer) return
 
-      this.chart = echarts.init(chartContainer)
+      this.chart = this.$echarts.init(chartContainer)
 
       this.$nextTick(() => {
         this.updateChart()
@@ -140,6 +154,7 @@ export default {
       if (!this.chart) return
 
       const cd = this.chartData[this.activeTab]
+      const echarts = this.$echarts
 
       const option = {
         grid: {
@@ -244,11 +259,6 @@ export default {
         this.chart.resize()
       }
     }
-  },
-  watch: {
-    activeTab() {
-      this.updateChart()
-    }
   }
 }
 </script>
@@ -322,10 +332,6 @@ export default {
   margin-bottom: 20px;
   position: relative;
   width: 100%;
-
-  canvas {
-    width: 100%;
-  }
 }
 
 .chart {
