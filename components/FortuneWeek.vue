@@ -377,8 +377,8 @@ export default {
 .week-picker {
   border: none;
   background: transparent;
-  font-size: 13px;
-  color: #666;
+  font-size: 15px;
+  color: #999;
   cursor: pointer;
   outline: none;
   appearance: none;
