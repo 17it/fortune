@@ -3,12 +3,21 @@ import request from '@/utils/request'
 /**
  * 本周运势
  */
-export function getWeeklyFortunenew(params) {
+export function getWeeklyFortunenew1(params) {
   return request({
     url: '/numberologynew/fortune/GetWeeklyFortunenew',
     method: 'get',
     params
   })
+}
+
+/**
+ * 本周运势
+ */
+export function getWeeklyFortunenew(params) {
+  const query = new URLSearchParams(params).toString()
+  return fetch(`https://coco70.51wnl-cq.com/numberologynew/fortune/GetWeeklyFortunenew?${query}`)
+  .then(res => res.json())
 }
 
 /**
