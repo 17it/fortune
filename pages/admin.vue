@@ -29,7 +29,7 @@
         </div>
         <div class="week-actions">
           <button class="btn btn-edit" @click="startEdit(week)">编辑</button>
-          <!--<button class="btn btn-delete" @click="handleDelete(week.key)">删除</button>-->
+          <button class="btn btn-delete" @click="handleDelete(week.key)">删除</button>
         </div>
       </div>
 
