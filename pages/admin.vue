@@ -62,10 +62,10 @@
 import { getLocalFortuneData, updateFortuneData, deleteFortuneData } from '@/api/index.js'
 
 const categories = [
-  { label: '事业运' },
-  { label: '财运' },
-  { label: '爱情运' },
-  { label: '健康运' }
+  { label: '综合' },
+  { label: '健康' },
+  { label: '事业' },
+  { label: '爱情' }
 ]
 
 export default {
