@@ -2,10 +2,10 @@ module.exports = {
   apps: [
     {
       name: 'fortune',
-      exec_mode: 'cluster',
-      instances: 1,
-      script: 'npm',
-      args: 'run start',
+      cwd: __dirname,
+      exec_mode: 'fork',
+      script: './node_modules/.bin/nuxt',
+      args: 'start',
       autorestart: true,
       watch: false,
       max_memory_restart: '1G',
